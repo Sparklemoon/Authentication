@@ -7,7 +7,9 @@ export default class Login extends Component {
 
         this.state = {
             username: "",
-            password: ""
+            password: "",
+            loginFailed: false,
+            loginError: false
         }
 
         this.handleChange = this.handleChange.bind(this)
@@ -21,7 +23,30 @@ export default class Login extends Component {
     handleSubmit(event) {
         event.preventDefault()
 
-        Cookies.set("username", this.state.username)
+        // Cookies.set("username", this.state.username)
+        fetch("http://127.0.0.1:5000/user/authentication", {
+            method:"POST",
+            headers: { "content-type": "application/json"},
+            body: JSON.stringify({
+                username: this.state.username,
+                password: this.state.password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            if (data === "SUCCESS") {
+                Cookies.set("username", this.state.username)
+                this.props.history.push("/")
+            }
+            else {
+                this.setState({ loginFailed: true })
+            }
+        })
+        .catch(error => {
+            console.log("Error logging in:", error)
+            this.setState({ loginError: true })
+        })
     }
 
     render() {
@@ -45,6 +70,8 @@ export default class Login extends Component {
 
                     <button type="submit">Login</button>
                 </form>
+                {this.state.loginFailed ? <p>Invaild Credentials...</p> : null}
+                {this.state.loginError ? <p>Error Logging In...PLease try again later :D</p> : null}
             </div>
         )}
     }
